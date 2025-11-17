@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Analysis</title>
+
+    <!-- Optional Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #0f172a;
+            font-family: "Inter", sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #fff;
+        }
+
+        .card {
+            background-color: #1e293b;
+            width: 60%;
+            margin: auto;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #cbd5e1;
+        }
+
+        .input-row {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-row label {
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-row input {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background-color: #0f172a;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #22c55e;
+            border: none;
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #16a34a;
+        }
+
+        #status {
+            margin-top: 15px;
+            color: #facc15;
+            font-weight: 500;
+        }
+
+        pre {
+            background-color: #0f172a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            color: #e2e8f0;
+            font-size: 15px;
+            border: 1px solid #1e293b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>Stock Analysis</h1>
+        <p>Enter a company name or ticker symbol and click the button to run the analysis.</p>
+
+        <div class="input-row">
+            <label for="company-input">Company or Ticker</label>
+            <input
+                id="company-input"
+                type="text"
+                placeholder="AAPL, MSFT, TSLA, Apple, Microsoft..."
+            />
+        </div>
+
+        <button id="run-btn">Run Analysis</button>
+        <p id="status"></p>
+
+        <h2>Result</h2>
+        <pre id="result"></pre>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

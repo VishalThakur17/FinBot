@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Earnings Call Q&A</title>
+
+  <!-- If you already have a global style.css, you can keep this -->
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    :root {
+      --bg: #050b19;
+      --card-bg: rgba(12, 20, 40, 0.95);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f5f7ff;
+      --text-muted: #b7bfd9;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.15);
+      --danger: #ff6b81;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow-soft: 0 18px 35px rgba(0, 0, 0, 0.45);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #101a35 0, #050b19 45%, #02040a 100%);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+    }
+
+    header.page-header {
+      margin-bottom: 26px;
+    }
+
+    .page-title {
+      font-size: 2.1rem;
+      font-weight: 650;
+      letter-spacing: 0.03em;
+      margin: 0 0 6px;
+    }
+
+    .page-subtitle {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr);
+      gap: 22px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-soft);
+      padding: 20px 22px 22px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin: 0 0 10px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #d5dcff;
+    }
+
+    .card small {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    /* Upload area */
+    .upload-group {
+      margin-bottom: 18px;
+    }
+
+    .upload-label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    #filesInput {
+      width: 100%;
+      padding: 10px 11px;
+      font-size: 0.9rem;
+      border-radius: var(--radius-md);
+      border: 1px dashed rgba(255, 255, 255, 0.3);
+      background: rgba(3, 6, 20, 0.8);
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    #filesInput::file-selector-button {
+      padding: 6px 12px;
+      margin-right: 10px;
+      border-radius: 999px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    #filesInput:hover::file-selector-button {
+      filter: brightness(1.06);
+    }
+
+    /* Questions input */
+    .questions-label {
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+
+    #questionsInput {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(3, 6, 20, 0.9);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      box-sizing: border-box;
+    }
+
+    #questionsInput:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    /* Button */
+    #analyzeBtn {
+      margin-top: 14px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #4f8cff, #7d5bff);
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(65, 115, 255, 0.4);
+      transition: transform 0.08s ease, box-shadow 0.08s ease,
+        filter 0.08s ease;
+      white-space: nowrap;
+    }
+
+    #analyzeBtn:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 12px 26px rgba(65, 115, 255, 0.55);
+      transform: translateY(-1px);
+    }
+
+    #analyzeBtn:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 14px rgba(65, 115, 255, 0.35);
+    }
+
+    /* Output panel */
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .output-header small {
+      font-size: 0.8rem;
+    }
+
+    #status {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .output-box {
+      margin-top: 10px;
+      padding: 12px 13px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: radial-gradient(circle at top left, #141d3b 0, #050815 60%);
+      min-height: 160px;
+      max-height: 470px;
+      overflow-y: auto;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .output-box.empty {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .error-text {
+      color: var(--danger);
+    }
+
+    .hint {
+      display: block;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <h1 class="page-title">Earnings Call Q&amp;A</h1>
+      <p class="page-subtitle">
+        Upload an earnings call transcript and ask questions. The model will
+        answer using only the uploaded call.
+      </p>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: inputs -->
+      <section class="card">
+        <h2>Inputs</h2>
+
+        <div class="upload-group">
+          <label class="upload-label" for="filesInput">
+            Upload Earnings Call Transcript (PDF or TXT)
+          </label>
+          <input
+            type="file"
+            id="filesInput"
+            accept=".pdf,.txt,.md,.rtf"
+            multiple
+          />
+          <small class="hint">
+            You can upload one or more files from the same earnings call.
+          </small>
+        </div>
+
+        <label class="questions-label" for="questionsInput">
+          Enter Your Questions
+        </label>
+        <textarea
+          id="questionsInput"
+          placeholder="Example:&#10;- How did the company perform compared to last year?&#10;- What risks did management highlight for next quarter?"
+        ></textarea>
+
+        <button id="analyzeBtn">Analyze &amp; Answer Questions</button>
+      </section>
+
+      <!-- RIGHT: output -->
+      <section class="card">
+        <div class="output-header">
+          <h2>Analysis Output</h2>
+          <small id="status"></small>
+        </div>
+
+        <div id="output" class="output-box empty">
+          Upload a transcript and enter at least one question, then click
+          “Analyze &amp; Answer Questions” to see the responses here.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Keep this name the same as your existing JS file for this page -->
+  <script src="earnings.js" defer></script>
+</body>
+</html>
+
+

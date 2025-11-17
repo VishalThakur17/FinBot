@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FinRobot – Start</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    .start-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+    }
+
+    .start-card {
+      max-width: 960px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+      padding: 28px 26px 30px;
+    }
+
+    .start-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 22px;
+    }
+
+    .start-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .start-subtitle {
+      font-size: 0.95rem;
+      color: #9ca3af;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .feature-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, #020617, #0b1120);
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 16px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .feature-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #818cf8;
+    }
+
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .feature-desc {
+      font-size: 0.9rem;
+      color: #cbd5f5;
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .feature-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .feature-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      color: #0b1120;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    .feature-button:hover {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(16, 185, 129, 0.45);
+    }
+
+    .feature-button span.icon {
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="start-wrapper">
+    <div class="start-card">
+      <div class="start-header">
+        <div class="start-title">FinRobot</div>
+        <div class="start-subtitle">
+          Choose what you want to do: quick stock overview, earnings Q&amp;A,
+          long-form report analysis, or scenario-based price forecasting.
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <!-- Simple company analysis -->
+        <section class="feature-card">
+          <div>
+            <div class="feature-label">Feature 1</div>
+            <h2 class="feature-title">Company Snapshot</h2>
+            <p class="feature-desc">
+              Enter a company or ticker (AAPL, MSFT, TSLA…) and get a concise,
+              AI-generated overview based on real market fundamentals.
+            </p>
+          </div>
+          <div class="feature-footer">
+            <a href="/index" class="feature-button">
+              <span>Open Snapshot</span>
+              <span class="icon">➡️</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Earnings Q&A -->
+        <section class="feature-card">
+          <div>
+            <div class="feature-label">Feature 2</div>
+            <h2 class="feature-title">Earnings Call Q&amp;A</h2>
+            <p class="feature-desc">
+              Upload one or more earnings call transcripts (PDF or TXT),
+              then ask questions and get focused answers from the model.
+            </p>
+          </div>
+          <div class="feature-footer">
+            <a href="/earnings" class="feature-button">
+              <span>Open Earnings Q&amp;A</span>
+              <span class="icon">🧾</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Report analyzer -->
+        <section class="feature-card">
+          <div>
+            <div class="feature-label">Feature 3</div>
+            <h2 class="feature-title">Report Analyzer</h2>
+            <p class="feature-desc">
+              Upload annual reports or 10-K style documents and get a
+              synthesized analysis of the business, risks, and key themes.
+            </p>
+          </div>
+          <div class="feature-footer">
+            <a href="/report" class="feature-button">
+              <span>Open Report Analyzer</span>
+              <span class="icon">📊</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Scenario forecast -->
+        <section class="feature-card">
+          <div>
+            <div class="feature-label">Feature 4</div>
+            <h2 class="feature-title">Scenario Forecast</h2>
+            <p class="feature-desc">
+              Use real historical prices plus a custom scenario (like higher
+              input costs) to generate a 3-month forecast line and explanation.
+            </p>
+          </div>
+          <div class="feature-footer">
+            <a href="/forecast" class="feature-button">
+              <span>Open Forecast</span>
+              <span class="icon">📈</span>
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

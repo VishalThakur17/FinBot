@@ -1,0 +1,72 @@
+Cash flow statement:
+2025-06-30    2024-06-30    2023-06-30    2022-06-30    2021-06-30
+Free Cash Flow                                  7.161100e+10  7.407100e+10  5.947500e+10  6.514900e+10           NaN
+Repurchase Of Capital Stock                    -1.842000e+10 -1.725400e+10 -2.224500e+10 -3.269600e+10           NaN
+Repayment Of Debt                              -3.216000e+09 -2.907000e+10 -2.750000e+09 -9.023000e+09           NaN
+Issuance Of Debt                                0.000000e+00  2.439500e+10  0.000000e+00  0.000000e+00           NaN
+Issuance Of Capital Stock                       2.056000e+09  2.002000e+09  1.866000e+09  1.841000e+09           NaN
+Capital Expenditure                            -6.455100e+10 -4.447700e+10 -2.810700e+10 -2.388600e+10           NaN
+End Cash Position                               3.024200e+10  1.831500e+10  3.470400e+10  1.393100e+10           NaN
+Beginning Cash Position                         1.831500e+10  3.470400e+10  1.393100e+10  1.422400e+10           NaN
+Effect Of Exchange Rate Changes                 6.300000e+07 -2.100000e+08 -1.940000e+08 -1.410000e+08           NaN
+Changes In Cash                                 1.186400e+10 -1.617900e+10  2.096700e+10 -1.520000e+08           NaN
+Financing Cash Flow                            -5.169900e+10 -3.775700e+10 -4.393500e+10 -5.887600e+10           NaN
+Cash Flow From Continuing Financing Activities -5.169900e+10 -3.775700e+10 -4.393500e+10 -5.887600e+10           NaN
+Net Other Financing Charges                    -2.291000e+09 -1.309000e+09 -1.006000e+09 -8.630000e+08           NaN
+Cash Dividends Paid                            -2.408200e+10 -2.177100e+10 -1.980000e+10 -1.813500e+10           NaN
+Common Stock Dividend Paid                     -2.408200e+10 -2.177100e+10 -1.980000e+10 -1.813500e+10           NaN
+Net Common Stock Issuance                      -1.636400e+10 -1.525200e+10 -2.037900e+10 -3.085500e+10           NaN
+Common Stock Payments                          -1.842000e+10 -1.725400e+10 -2.224500e+10 -3.269600e+10           NaN
+Common Stock Issuance                           2.056000e+09  2.002000e+09  1.866000e+09  1.841000e+09           NaN
+Net Issuance Payments Of Debt                  -8.962000e+09  5.750000e+08 -2.750000e+09 -9.023000e+09           NaN
+Net Short Term Debt Issuance                   -5.746000e+09  5.250000e+09  0.000000e+00  0.000000e+00           NaN
+Short Term Debt Issuance                                 NaN  5.250000e+09  0.000000e+00  0.000000e+00           NaN
+Net Long Term Debt Issuance                    -3.216000e+09 -4.675000e+09 -2.750000e+09 -9.023000e+09           NaN
+Long Term Debt Payments                        -3.216000e+09 -2.907000e+10 -2.750000e+09 -9.023000e+09           NaN
+Long Term Debt Issuance                         0.000000e+00  2.439500e+10  0.000000e+00  0.000000e+00           NaN
+Investing Cash Flow                            -7.259900e+10 -9.697000e+10 -2.268000e+10 -3.031100e+10           NaN
+Cash Flow From Continuing Investing Activities -7.259900e+10 -9.697000e+10 -2.268000e+10 -3.031100e+10           NaN
+Net Other Investing Changes                     2.317000e+09 -1.298000e+09 -3.116000e+09 -2.825000e+09           NaN
+Net Investment Purchase And Sale               -4.387000e+09  1.793700e+10  1.021300e+10  1.843800e+10           NaN
+Sale Of Investment                              2.538800e+10  3.566900e+10  4.786400e+10  4.489400e+10           NaN
+Purchase Of Investment                         -2.977500e+10 -1.773200e+10 -3.765100e+10 -2.645600e+10           NaN
+Net Business Purchase And Sale                 -5.978000e+09 -6.913200e+10 -1.670000e+09 -2.203800e+10           NaN
+Purchase Of Business                           -5.978000e+09 -6.913200e+10 -1.670000e+09 -2.203800e+10           NaN
+Net PPE Purchase And Sale                      -6.455100e+10 -4.447700e+10 -2.810700e+10 -2.388600e+10           NaN
+Purchase Of PPE                                -6.455100e+10 -4.447700e+10 -2.810700e+10 -2.388600e+10           NaN
+Operating Cash Flow                             1.361620e+11  1.185480e+11  8.758200e+10  8.903500e+10           NaN
+Cash Flow From Continuing Operating Activities  1.361620e+11  1.185480e+11  8.758200e+10  8.903500e+10           NaN
+Change In Working Capital                      -5.350000e+09  1.824000e+09 -2.388000e+09  4.460000e+08           NaN
+Change In Other Working Capital                 5.400000e+09  7.035000e+09  5.177000e+09  5.805000e+09           NaN
+Change In Other Current Liabilities             4.947000e+09  5.616000e+09  2.825000e+09  3.169000e+09           NaN
+Change In Other Current Assets                 -5.994000e+09 -8.465000e+09 -4.824000e+09 -3.514000e+09           NaN
+Change In Payables And Accrued Expense          5.690000e+08  3.545000e+09 -2.721000e+09  2.943000e+09           NaN
+Change In Payable                               5.690000e+08  3.545000e+09 -2.721000e+09  2.943000e+09           NaN
+Change In Account Payable                       5.690000e+08  3.545000e+09 -2.721000e+09  2.943000e+09           NaN
+Change In Tax Payable                                    NaN  1.687000e+09 -3.580000e+08  6.960000e+08 -2.309000e+09
+Change In Income Tax Payable                             NaN  1.687000e+09 -3.580000e+08  6.960000e+08 -2.309000e+09
+Change In Inventory                             3.090000e+08  1.284000e+09  1.242000e+09 -1.123000e+09           NaN
+Change In Receivables                          -1.058100e+10 -7.191000e+09 -4.087000e+09 -6.834000e+09           NaN
+Changes In Account Receivables                 -1.058100e+10 -7.191000e+09 -4.087000e+09 -6.834000e+09           NaN
+Stock Based Compensation                        1.197400e+10  1.073400e+10  9.611000e+09  7.502000e+09           NaN
+Unrealized Gain Loss On Investment Securities  -5.360000e+08 -1.460000e+08 -3.030000e+08 -5.090000e+08           NaN
+Asset Impairment Charge                         9.430000e+08  2.060000e+08  3.000000e+07  1.010000e+08           NaN
+Deferred Tax                                   -7.056000e+09 -4.738000e+09 -6.059000e+09 -5.702000e+09           NaN
+Deferred Income Tax                            -7.056000e+09 -4.738000e+09 -6.059000e+09 -5.702000e+09           NaN
+Depreciation Amortization Depletion             3.415300e+10  2.228700e+10  1.386100e+10  1.446000e+10           NaN
+Depreciation And Amortization                   3.415300e+10  2.228700e+10  1.386100e+10  1.446000e+10           NaN
+Depreciation                                    3.415300e+10  2.228700e+10  1.386100e+10  1.446000e+10           NaN
+Operating Gains Losses                          2.020000e+08  2.450000e+08  4.690000e+08 -1.000000e+06           NaN
+Gain Loss On Investment Securities              2.020000e+08  2.450000e+08  4.690000e+08 -1.000000e+06           NaN
+Net Income From Continuing Operations           1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10           NaN
+
+Resource: Failed to retrieve data: 401
+
+Instruction: 
+Dive into a comprehensive evaluation of the company's cash flow for the latest fiscal year, focusing on cash inflows 
+and outflows across operating, investing, and financing activities. Examine the operational cash flow to assess the 
+core business profitability, scrutinize investing activities for insights into capital expenditures and investments, 
+and review financing activities to understand debt, equity movements, and dividend policies. Compare these cash movements 
+to prior periods to discern trends, sustainability, and liquidity risks. Conclude with an informed analysis of the company's 
+cash management effectiveness, liquidity position, and potential for future growth or financial challenges in a single paragraph. 
+Less than 130 words.

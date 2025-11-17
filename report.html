@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>FinRobot – Report Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Reuse your main stylesheet -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <style>
+        /* Optional: small page-specific tweaks */
+        .page-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .card {
+            background: #111827;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 1px solid #1f2937;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        .file-input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-input-row input[type="file"] {
+            padding: 0.5rem;
+            background: #020617;
+            border-radius: 0.5rem;
+            border: 1px solid #374151;
+            color: #e5e7eb;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.4rem;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: linear-gradient(135deg, #22c55e, #0ea5e9);
+            color: #0b1120;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(34,197,94,0.3);
+        }
+
+        #status {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        #fileList {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        #errorBox {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #fecaca;
+            display: none;
+            white-space: pre-wrap;
+        }
+
+        #resultContainer {
+            margin-top: 2rem;
+        }
+
+        #resultTitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        #result {
+            white-space: pre-wrap;
+            line-height: 1.5;
+            color: #e5e7eb;
+            background: #020617;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 1px solid #111827;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        a.back-link {
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        a.back-link:hover {
+            color: #e5e7eb;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <a href="/" class="back-link">← Back to Ticker Analysis</a>
+
+        <div class="card" style="margin-top: 1rem;">
+            <h1>Report-Based Company Analysis</h1>
+            <p style="color:#9ca3af;">
+                Upload one or more company reports (10-K, 10-Q, or consolidated financial statements)
+                and FinRobot will send them to ChatGPT to generate a detailed, paragraph-style analysis.
+            </p>
+
+            <div class="file-input-row">
+                <label for="fileInput"><strong>Select report files (PDF or text)</strong></label>
+                <!-- multiple files allowed -->
+                <input type="file" id="fileInput" multiple />
+                <div id="fileList"></div>
+            </div>
+
+            <button id="analyzeBtn" class="btn-primary">
+                Analyze Reports
+            </button>
+
+            <div id="status"></div>
+            <div id="errorBox"></div>
+        </div>
+
+        <div id="resultContainer">
+            <div id="resultTitle" style="display:none;">Analysis</div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script src="/report.js"></script>
+</body>
+</html>
+

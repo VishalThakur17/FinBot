@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scenario-Based Stock Forecast</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050b19;
+      color: #f5f7ff;
+      display: flex;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 32px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      background: rgba(12, 20, 40, 0.95);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+      padding: 24px 28px 32px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #b7bfd9;
+      margin-bottom: 18px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 800px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #b7bfd9;
+    }
+
+    input[type="text"],
+    textarea {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #f5f7ff;
+      font-size: 0.95rem;
+      outline: none;
+      resize: vertical;
+      min-height: 40px;
+    }
+
+    textarea {
+      min-height: 80px;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #4f8cff;
+      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: #4f8cff;
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(79, 140, 255, 0.45);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.1s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(79, 140, 255, 0.6);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: #b7bfd9;
+    }
+
+    .status.error {
+      color: #ff6b81;
+    }
+
+    .chart-card {
+      background: rgba(5, 10, 24, 0.9);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 16px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .chart-title {
+      font-size: 1rem;
+    }
+
+    .chart-subtitle {
+      font-size: 0.8rem;
+      color: #8d95b5;
+    }
+
+    #explanation {
+      font-size: 0.9rem;
+      color: #d6dcff;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      
+    }
+
+    .chart-card {
+      height: 400px;       /* FIXED HEIGHT */
+      max-height: 400px;   /* PREVENT STRETCH */
+      position: relative;  /* required for Chart.js responsive canvas */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Scenario-Based Forecast Simulator</h1>
+    <div class="subtitle">
+      Enter a company and a "what if" scenario. We'll pull the last 12 months of prices, generate a 3-month scenario forecast, and explain the reasoning.
+    </div>
+
+    <form id="forecastForm">
+      <div class="form-row">
+        <div class="field-group">
+          <label for="companyInput">Company or Ticker (e.g., <strong>AAPL</strong> or <strong>Apple</strong>)</label>
+          <input id="companyInput" type="text" placeholder="AAPL" required />
+        </div>
+
+        <div class="field-group">
+          <label for="scenarioInput">Scenario (e.g., "cost of materials for iPhone goes up 15%")</label>
+          <textarea id="scenarioInput" placeholder="Describe a specific business or macro scenario..." required></textarea>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button type="submit" id="runForecastBtn">
+          Run Scenario Forecast
+        </button>
+        <div class="status" id="statusText"></div>
+      </div>
+    </form>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title" id="chartTitle">No data loaded yet</div>
+        <div class="chart-subtitle">Green: last 12 months • Red: next 3 months under scenario</div>
+      </div>
+      <canvas id="forecastChart" height="120"></canvas>
+    </div>
+
+    <div id="explanation"></div>
+  </div>
+
+  <script src="forecast.js"></script>
+</body>
+</html>
+

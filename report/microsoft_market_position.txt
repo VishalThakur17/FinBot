@@ -1,0 +1,62 @@
+Income statement (Segment Analysis):
+2025-06-30    2024-06-30    2023-06-30    2022-06-30
+Tax Effect Of Unusual Items                                -7.708800e+07 -9.991800e+07 -2.850000e+06  4.375400e+07
+Tax Rate For Calcs                                          1.760000e-01  1.820000e-01  1.900000e-01  1.310000e-01
+Normalized EBITDA                                           1.606030e+11  1.335580e+11  1.051550e+11  9.990500e+10
+Total Unusual Items                                        -4.380000e+08 -5.490000e+08 -1.500000e+07  3.340000e+08
+Total Unusual Items Excluding Goodwill                     -4.380000e+08 -5.490000e+08 -1.500000e+07  3.340000e+08
+Net Income From Continuing Operation Net Minority Interest  1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Reconciled Depreciation                                     3.415300e+10  2.228700e+10  1.386100e+10  1.446000e+10
+Reconciled Cost Of Revenue                                  8.783100e+10  7.411400e+10  6.586300e+10  6.265000e+10
+EBITDA                                                      1.601650e+11  1.330090e+11  1.051400e+11  1.002390e+11
+EBIT                                                        1.260120e+11  1.107220e+11  9.127900e+10  8.577900e+10
+Net Interest Income                                         2.620000e+08  2.220000e+08  1.026000e+09  3.100000e+07
+Interest Expense                                            2.385000e+09  2.935000e+09  1.968000e+09  2.063000e+09
+Interest Income                                             2.647000e+09  3.157000e+09  2.994000e+09  2.094000e+09
+Normalized Income                                           1.021929e+11  8.858508e+10  7.237315e+10  7.244775e+10
+Net Income From Continuing And Discontinued Operation       1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Total Expenses                                              1.531960e+11  1.356890e+11  1.233920e+11  1.148870e+11
+Total Operating Income As Reported                          1.285280e+11  1.094330e+11  8.852300e+10  8.338300e+10
+Diluted Average Shares                                      7.465000e+09  7.469000e+09  7.472000e+09  7.540000e+09
+Basic Average Shares                                        7.433000e+09  7.431000e+09  7.446000e+09  7.496000e+09
+Diluted EPS                                                 1.364000e+01  1.180000e+01  9.680000e+00  9.650000e+00
+Basic EPS                                                   1.370000e+01  1.186000e+01  9.720000e+00  9.700000e+00
+Diluted NI Availto Com Stockholders                         1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Net Income Common Stockholders                              1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Net Income                                                  1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Net Income Including Noncontrolling Interests               1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Net Income Continuous Operations                            1.018320e+11  8.813600e+10  7.236100e+10  7.273800e+10
+Tax Provision                                               2.179500e+10  1.965100e+10  1.695000e+10  1.097800e+10
+Pretax Income                                               1.236270e+11  1.077870e+11  8.931100e+10  8.371600e+10
+Other Income Expense                                       -5.163000e+09 -1.868000e+09 -2.380000e+08  3.020000e+08
+Other Non Operating Income Expenses                        -4.725000e+09 -1.319000e+09 -2.230000e+08 -3.200000e+07
+Special Income Charges                                     -9.430000e+08 -2.060000e+08 -3.000000e+07 -1.010000e+08
+Write Off                                                   9.430000e+08  2.060000e+08  3.000000e+07  1.010000e+08
+Gain On Sale Of Security                                    5.050000e+08 -3.430000e+08  1.500000e+07  4.350000e+08
+Net Non Operating Interest Income Expense                   2.620000e+08  2.220000e+08  1.026000e+09  3.100000e+07
+Interest Expense Non Operating                              2.385000e+09  2.935000e+09  1.968000e+09  2.063000e+09
+Interest Income Non Operating                               2.647000e+09  3.157000e+09  2.994000e+09  2.094000e+09
+Operating Income                                            1.285280e+11  1.094330e+11  8.852300e+10  8.338300e+10
+Operating Expense                                           6.536500e+10  6.157500e+10  5.752900e+10  5.223700e+10
+Research And Development                                    3.248800e+10  2.951000e+10  2.719500e+10  2.451200e+10
+Selling General And Administration                          3.287700e+10  3.206500e+10  3.033400e+10  2.772500e+10
+Selling And Marketing Expense                               2.565400e+10  2.445600e+10  2.275900e+10  2.182500e+10
+General And Administrative Expense                          7.223000e+09  7.609000e+09  7.575000e+09  5.900000e+09
+Other Gand A                                                7.223000e+09  7.609000e+09  7.575000e+09  5.900000e+09
+Gross Profit                                                1.938930e+11  1.710080e+11  1.460520e+11  1.356200e+11
+Cost Of Revenue                                             8.783100e+10  7.411400e+10  6.586300e+10  6.265000e+10
+Total Revenue                                               2.817240e+11  2.451220e+11  2.119150e+11  1.982700e+11
+Operating Revenue                                           2.817240e+11  2.451220e+11  2.119150e+11  1.982700e+11
+
+Resource: Failed to retrieve data: 401
+
+Instruction: 
+Identify the company's business segments and create a segment analysis using the Management's Discussion and Analysis 
+and the income statement, subdivided by segment with clear headings. Address revenue and net profit with specific data, 
+and calculate the changes. Detail strategic partnerships and their impacts, including details like the companies or organizations. 
+Describe product innovations and their effects on income growth. Quantify market share and its changes, or state market position 
+and its changes. Analyze market dynamics and profit challenges, noting any effects from national policy changes. Include the cost side, 
+detailing operational costs, innovation investments, and expenses from channel expansion, etc. Support each statement with evidence, 
+keeping each segment analysis concise and under 60 words, accurately sourcing information. For each segment, consolidate the most 
+significant findings into one clear, concise paragraph, excluding less critical or vaguely described aspects to ensure clarity and 
+reliance on evidence-backed information. For each segment, the output should be one single paragraph within 150 words.
