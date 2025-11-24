@@ -327,7 +327,10 @@ def extract_text_from_filestorage(fs) -> str:
 
     if ext == ".pdf" and PyPDF2 is not None:
         try:
-            reader = PyPDF2.PdfReader(bytes(data))
+            from io import BytesIO
+            # Wrap raw bytes in a file-like object for PyPDF2
+            pdf_stream = BytesIO(data)
+            reader = PyPDF2.PdfReader(pdf_stream)
             pages = [page.extract_text() or "" for page in reader.pages]
             return "\n".join(pages)
         except Exception as e:
@@ -544,17 +547,30 @@ def api_analyze_report():
         "write a concise but insightful analysis for a long-term investor. "
         "Highlight the business model, recent performance, balance sheet health, key risks, "
         "and any notable opportunities or strategic initiatives. Avoid direct investment advice."
+        "Key risks or concerns that stand out. Concrete recommendations for how the company can either sustain its success or improve in the next quarter Give a very detailed summary of muliple paragraphs of exact and precise suggestions with what the company can do for the next quarter and how they can achieve these suggestions"
     )
 
     user_prompt = f"""
-Below are one or more company reports or filings:
+        The user has uploaded a company report (10-K, 10-Q, or consolidated financial statements).
 
-=== REPORT TEXT START ===
-{combined_text}
-=== REPORT TEXT END ===
+        Using the text below, write a detailed analysis in 4–7 well-structured paragraphs.
+        Do NOT use bullet points or numbered lists — only paragraphs.
 
-Write an analysis of these reports (3–6 paragraphs). Use clear headings if helpful.
-"""
+        Cover at least:
+        - Overall financial health and performance for the period
+        - Revenue and profitability trends
+        - Notable segment or regional performance if visible
+        - Balance sheet and cash flow strength or weakness
+        - Key risks or concerns that stand out
+        - Concrete recommendations for how the company can either sustain its success
+        or improve in the next quarter
+        - Give a very detailed summary of 2-3 paragraphs of exact and precise suggestions with what the company can do for the next quarter and how they can achieve these suggestions
+
+        Write as if explaining to an informed but non-expert investor.
+
+        Report text:
+        \"\"\"{text}\"\"\"
+        """
 
     try:
         resp = openai_client.chat.completions.create(
