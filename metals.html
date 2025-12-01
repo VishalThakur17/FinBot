@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Metals Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #020617;
+      color: #f9fafb;
+    }
+    .page-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 16px 40px;
+    }
+    h1 {
+      text-align: center;
+      margin: 0 0 24px 0;
+      font-size: 1.8rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.75);
+      padding: 16px 18px 18px;
+    }
+    label {
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    input[type="text"] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+    }
+    input[type="text"]::placeholder {
+      color: #4b5563;
+    }
+    button {
+      margin-top: 6px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #f9fafb;
+      font-weight: 600;
+      font-size: 0.95rem;
+      align-self: flex-start;
+      box-shadow: 0 8px 22px rgba(22, 163, 74, 0.55);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(22, 163, 74, 0.6);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .status {
+      margin: 6px 0 12px 2px;
+      font-size: 0.9rem;
+    }
+    .status.loading { color: #facc15; }
+    .status.success { color: #22c55e; }
+    .status.error   { color: #f97373; }
+
+    #metals-results {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metal-card {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.75);
+      padding: 14px 18px 16px;
+    }
+    .metal-card h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .metal-card p {
+      margin: 2px 0;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+    }
+    .metal-card p strong {
+      color: #e5e7eb;
+    }
+
+    #metals-chart-container {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.75);
+      padding: 14px 18px 18px;
+      display: none;
+    }
+    #metals-chart-container h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+    }
+    #metals-chart-img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+      border: 1px solid #111827;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <h1>Metals Intelligence</h1>
+
+    <form id="metals-form">
+      <label for="metals-input">
+        Enter one or more metals (comma-separated, e.g. gold, silver, platinum):  
+        (You can also enter symbols like <code>GC=F</code>, <code>SI=F</code>, <code>REMX</code>)
+      </label>
+      <input
+        type="text"
+        id="metals-input"
+        name="metals"
+        placeholder="gold, silver"
+        required
+      />
+      <button type="submit" id="metals-submit-btn">Analyze</button>
+    </form>
+
+    <div id="metals-status" class="status"></div>
+
+    <div id="metals-results"></div>
+
+    <div id="metals-chart-container">
+      <h3>12-Month Price History (first metal)</h3>
+      <img id="metals-chart-img" alt="Metal 12-month chart" />
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("metals-form");
+      const input = document.getElementById("metals-input");
+      const statusEl = document.getElementById("metals-status");
+      const resultsEl = document.getElementById("metals-results");
+      const chartContainer = document.getElementById("metals-chart-container");
+      const chartImg = document.getElementById("metals-chart-img");
+      const submitBtn = document.getElementById("metals-submit-btn");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const raw = (input.value || "").trim();
+        if (!raw) {
+          statusEl.textContent = "Please enter at least one metal.";
+          statusEl.className = "status error";
+          return;
+        }
+
+        const metals = raw
+          .split(",")
+          .map((m) => m.trim())
+          .filter(Boolean);
+
+        statusEl.textContent = "Analyzing…";
+        statusEl.className = "status loading";
+        resultsEl.innerHTML = "";
+        chartContainer.style.display = "none";
+        submitBtn.disabled = true;
+
+        try {
+          const response = await fetch("/api/metals-info", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ metals })
+          });
+
+          let data;
+          try {
+            data = await response.json();
+          } catch {
+            data = null;
+          }
+
+          if (!response.ok) {
+            const msg = data && data.error ? data.error : `Server error: ${response.status}`;
+            throw new Error(msg);
+          }
+
+          if (!data.success) {
+            throw new Error(data.error || "Unknown error from server");
+          }
+
+          // Render cards
+          resultsEl.innerHTML = data.metals
+            .map((m) => {
+              const price = m.current_price != null ? m.current_price.toLocaleString() : "N/A";
+              const prev = m.previous_close != null ? m.previous_close.toLocaleString() : "N/A";
+              const dayHigh = m.day_high != null ? m.day_high.toLocaleString() : "N/A";
+              const dayLow = m.day_low != null ? m.day_low.toLocaleString() : "N/A";
+              const change = m.change_pct != null ? m.change_pct.toFixed(2) + "%" : "N/A";
+              const wkLow = m.fifty_two_week_low != null ? m.fifty_two_week_low.toLocaleString() : "N/A";
+              const wkHigh = m.fifty_two_week_high != null ? m.fifty_two_week_high.toLocaleString() : "N/A";
+              const vol = m.volume != null ? m.volume.toLocaleString() : "N/A";
+              const currency = m.currency || "USD";
+
+              return `
+                <div class="metal-card">
+                  <h2>${m.name} (${m.symbol})</h2>
+                  <p><strong>Current Price:</strong> ${price} ${currency}</p>
+                  <p><strong>Previous Close:</strong> ${prev} ${currency}</p>
+                  <p><strong>24h Change:</strong> ${change}</p>
+                  <p><strong>Day High / Low:</strong> ${dayHigh} / ${dayLow} ${currency}</p>
+                  <p><strong>52-Week Range:</strong> ${wkLow} – ${wkHigh} ${currency}</p>
+                  <p><strong>Volume:</strong> ${vol}</p>
+                  <p><em>Input:</em> ${m.input}</p>
+                </div>
+              `;
+            })
+            .join("");
+
+          // Show chart for first metal if present
+          if (data.chart_image) {
+            chartImg.src = "data:image/png;base64," + data.chart_image;
+            chartContainer.style.display = "block";
+          }
+
+          statusEl.textContent = "Done ✔";
+          statusEl.className = "status success";
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Error: " + err.message;
+          statusEl.className = "status error";
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

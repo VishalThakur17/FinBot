@@ -1,12 +1,18 @@
 import os
 import datetime as dt
 from typing import List, Dict, Any
+import io
+import base64
 
 from flask import Flask, request, jsonify, send_from_directory
 from dateutil.relativedelta import relativedelta
 from openai import OpenAI
 import yfinance as yf
 import pandas as pd
+import matplotlib.pyplot as plt
+
+from crypto_utils import CryptoUtils
+from metals_utils import MetalsUtils  # <-- NEW
 
 try:
     import PyPDF2  # optional but recommended for PDF transcripts
@@ -424,6 +430,28 @@ def style_css():
     return send_from_directory(BASE_DIR, "style.css")
 
 
+# New crypto page route (serves crypto.html from project root)
+@app.route("/crypto")
+def crypto_page():
+    return send_from_directory(BASE_DIR, "crypto.html")
+
+
+@app.route("/crypto.html")
+def crypto_html_alias():
+    return send_from_directory(BASE_DIR, "crypto.html")
+
+
+# New metals page route (serves metals.html from project root)
+@app.route("/metals")
+def metals_page():
+    return send_from_directory(BASE_DIR, "metals.html")
+
+
+@app.route("/metals.html")
+def metals_html_alias():
+    return send_from_directory(BASE_DIR, "metals.html")
+
+
 # ---------------------------------------------------------------------------
 # Routes: APIs
 # ---------------------------------------------------------------------------
@@ -569,9 +597,7 @@ def api_analyze_report():
         Write as if explaining to an informed but non-expert investor.
 
         Report text:
-        \"\"\"{text}\"\"\"
-        """
-
+        \"\"\"{text}\"\"\""""
     try:
         resp = openai_client.chat.completions.create(
             model="gpt-4o",
@@ -645,12 +671,138 @@ def api_forecast_scenario():
         }
         return jsonify(response)
     except Exception as e:
-        print(f"[api/forecast_scenario] Error: {e}")
+        print(f"[api_forecast_scenario] Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/crypto-info", methods=["POST"])
+def api_crypto_info():
+    """
+    Endpoint for crypto.html (inline JS).
+
+    Expects JSON:
+      { "cryptos": ["bitcoin", "ethereum", ...] }
+
+    Returns JSON:
+      {
+        "success": true,
+        "cryptos": [ { ...info... }, ... ],
+        "chart_image": "<base64 png or null>"
+      }
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    cryptos = data.get("cryptos") or []
+    if not isinstance(cryptos, list) or not cryptos:
+        return jsonify({"success": False, "error": "No cryptos provided."}), 400
+
+    results: List[Dict[str, Any]] = []
+    first_valid_symbol: str | None = None
+
+    for raw_symbol in cryptos:
+        symbol = (str(raw_symbol) or "").strip()
+        if not symbol:
+            continue
+        try:
+            info = CryptoUtils.get_crypto_info(symbol)
+            results.append(info)
+            if first_valid_symbol is None:
+                first_valid_symbol = symbol
+        except Exception as e:
+            print(f"[api/crypto-info] Error fetching {symbol}: {e}")
+
+    if not results:
+        return jsonify({"success": False, "error": "No valid cryptos found."}), 400
+
+    chart_b64: str | None = None
+    if first_valid_symbol:
+        try:
+            df = CryptoUtils.get_crypto_history(first_valid_symbol, days=365)
+            if not df.empty:
+                fig, ax = plt.subplots(figsize=(8, 3))
+                df["price"].plot(ax=ax)
+                ax.set_title(f"{first_valid_symbol.capitalize()} — Last 12 Months")
+                ax.set_ylabel("Price (USD)")
+                ax.grid(True)
+                fig.tight_layout()
+
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png")
+                plt.close(fig)
+                buf.seek(0)
+                chart_b64 = base64.b64encode(buf.read()).decode("utf-8")
+        except Exception as e:
+            print(f"[api/crypto-info] Error generating chart for {first_valid_symbol}: {e}")
+            chart_b64 = None
+
+    return jsonify({"success": True, "cryptos": results, "chart_image": chart_b64})
+
+
+@app.route("/api/metals-info", methods=["POST"])
+def api_metals_info():
+    """
+    Endpoint for metals.html (inline JS).
+
+    Expects JSON:
+      { "metals": ["gold", "silver", ...] }
+
+    Returns JSON:
+      {
+        "success": true,
+        "metals": [ { ...info... }, ... ],
+        "chart_image": "<base64 png or null>"
+      }
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    metals = data.get("metals") or []
+    if not isinstance(metals, list) or not metals:
+        return jsonify({"success": False, "error": "No metals provided."}), 400
+
+    results: List[Dict[str, Any]] = []
+    first_valid_input: str | None = None
+
+    for m in metals:
+        name = (str(m) or "").strip()
+        if not name:
+            continue
+        try:
+            info = MetalsUtils.get_metal_info(name)
+            results.append(info)
+            if first_valid_input is None:
+                first_valid_input = name
+        except Exception as e:
+            print(f"[api/metals-info] Error fetching {name}: {e}")
+
+    if not results:
+        return jsonify({"success": False, "error": "No valid metals found."}), 400
+
+    chart_b64: str | None = None
+    if first_valid_input:
+        try:
+            df = MetalsUtils.get_metal_history(first_valid_input, period="1y")
+            if not df.empty:
+                fig, ax = plt.subplots(figsize=(8, 3))
+                df["price"].plot(ax=ax)
+                ax.set_title(f"{first_valid_input.title()} — Last 12 Months")
+                ax.set_ylabel("Price")
+                ax.grid(True)
+                fig.tight_layout()
+
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png")
+                plt.close(fig)
+                buf.seek(0)
+                chart_b64 = base64.b64encode(buf.read()).decode("utf-8")
+        except Exception as e:
+            print(f"[api/metals-info] Error generating chart for {first_valid_input}: {e}")
+            chart_b64 = None
+
+    return jsonify({"success": True, "metals": results, "chart_image": chart_b64})
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
 
 
 

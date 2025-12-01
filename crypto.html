@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crypto Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #020617;
+      color: #f9fafb;
+    }
+    .page-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 16px 40px;
+    }
+    h1 {
+      text-align: center;
+      margin: 0 0 24px 0;
+      font-size: 1.8rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.75);
+      padding: 16px 18px 18px;
+    }
+    label {
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    input[type="text"] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+    }
+    input[type="text"]::placeholder {
+      color: #4b5563;
+    }
+    button {
+      margin-top: 6px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #f9fafb;
+      font-weight: 600;
+      font-size: 0.95rem;
+      align-self: flex-start;
+      box-shadow: 0 8px 22px rgba(37, 99, 235, 0.55);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.6);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .status {
+      margin: 6px 0 12px 2px;
+      font-size: 0.9rem;
+    }
+    .status.loading { color: #facc15; }
+    .status.success { color: #22c55e; }
+    .status.error   { color: #f97373; }
+
+    #crypto-results {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .crypto-card {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.75);
+      padding: 14px 18px 16px;
+    }
+    .crypto-card h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .crypto-card p {
+      margin: 2px 0;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+    }
+    .crypto-card p strong {
+      color: #e5e7eb;
+    }
+    .crypto-description {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #111827;
+      font-size: 0.9rem;
+      color: #cbd5f5;
+    }
+
+    #crypto-chart-container {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.75);
+      padding: 14px 18px 18px;
+      display: none;
+    }
+    #crypto-chart-container h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+    }
+    #crypto-chart-img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+      border: 1px solid #111827;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <h1>Crypto Intelligence</h1>
+
+    <form id="crypto-form">
+      <label for="crypto-input">
+        Enter one or more cryptocurrencies (comma-separated, e.g. bitcoin, ethereum, solana):
+      </label>
+      <input
+        type="text"
+        id="crypto-input"
+        name="cryptos"
+        placeholder="bitcoin, ethereum"
+        required
+      />
+      <button type="submit" id="crypto-submit-btn">Analyze</button>
+    </form>
+
+    <div id="crypto-status" class="status"></div>
+
+    <div id="crypto-results"></div>
+
+    <div id="crypto-chart-container">
+      <h3>12-Month Price History (first crypto)</h3>
+      <img id="crypto-chart-img" alt="Crypto 12-month chart" />
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("crypto-form");
+      const input = document.getElementById("crypto-input");
+      const statusEl = document.getElementById("crypto-status");
+      const resultsEl = document.getElementById("crypto-results");
+      const chartContainer = document.getElementById("crypto-chart-container");
+      const chartImg = document.getElementById("crypto-chart-img");
+      const submitBtn = document.getElementById("crypto-submit-btn");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const raw = (input.value || "").trim();
+        if (!raw) {
+          statusEl.textContent = "Please enter at least one cryptocurrency.";
+          statusEl.className = "status error";
+          return;
+        }
+
+        const cryptos = raw
+          .split(",")
+          .map((c) => c.trim().toLowerCase())
+          .filter(Boolean);
+
+        statusEl.textContent = "Analyzing…";
+        statusEl.className = "status loading";
+        resultsEl.innerHTML = "";
+        chartContainer.style.display = "none";
+        submitBtn.disabled = true;
+
+        try {
+          const response = await fetch("/api/crypto-info", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cryptos })
+          });
+
+          let data;
+          try {
+            data = await response.json();
+          } catch {
+            data = null;
+          }
+
+          if (!response.ok) {
+            const msg = data && data.error ? data.error : `Server error: ${response.status}`;
+            throw new Error(msg);
+          }
+
+          if (!data.success) {
+            throw new Error(data.error || "Unknown error from server");
+          }
+
+          // Render crypto info cards, including description
+          resultsEl.innerHTML = data.cryptos
+            .map((c) => `
+              <div class="crypto-card">
+                <h2>${c.name} (${c.symbol.toUpperCase()})</h2>
+
+                <p><strong>Price:</strong> $${c.current_price.toLocaleString()}</p>
+                <p><strong>Market Cap:</strong> $${c.market_cap.toLocaleString()}</p>
+                <p><strong>24h Change:</strong> ${c.price_change_24h.toFixed(2)}%</p>
+                <p><strong>24h High / Low:</strong> $${c.high_24h.toLocaleString()} / $${c.low_24h.toLocaleString()}</p>
+
+                <p class="crypto-description">
+                  <strong>Description:</strong>
+                  ${c.description && c.description.trim()
+                    ? c.description
+                    : "No description available."}
+                </p>
+              </div>
+            `)
+            .join("");
+
+          // Show chart for the first crypto if present
+          if (data.chart_image) {
+            chartImg.src = "data:image/png;base64," + data.chart_image;
+            chartContainer.style.display = "block";
+          }
+
+          statusEl.textContent = "Done ✔";
+          statusEl.className = "status success";
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Error: " + err.message;
+          statusEl.className = "status error";
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
