@@ -3,16 +3,21 @@ import datetime as dt
 from typing import List, Dict, Any
 import io
 import base64
+import math  
 
 from flask import Flask, request, jsonify, send_from_directory
 from dateutil.relativedelta import relativedelta
 from openai import OpenAI
 import yfinance as yf
 import pandas as pd
+# IMPORTANT: use a non-GUI backend for matplotlib
+import matplotlib
+matplotlib.use("Agg")    
 import matplotlib.pyplot as plt
 
 from crypto_utils import CryptoUtils
-from metals_utils import MetalsUtils  # <-- NEW
+from metals_utils import MetalsUtils 
+from bonds_utils import BondsUtils
 
 try:
     import PyPDF2  # optional but recommended for PDF transcripts
@@ -351,6 +356,172 @@ def extract_text_from_filestorage(fs) -> str:
 
 
 # ---------------------------------------------------------------------------
+# NEW helpers: feasibility, risk, growth projections (Investment Strategy Builder)
+# ---------------------------------------------------------------------------
+
+def compute_required_return(current: float, target: float, years: float) -> float | None:
+    """
+    Compute the annualized return needed to go from `current` to `target` in `years`.
+
+    A = P * (1 + r)^n  ->  r = (A / P)^(1/n) - 1
+
+    Returns r as a decimal (0.07 = 7%). Returns None if invalid input.
+    """
+    if current <= 0 or target <= 0 or years <= 0:
+        return None
+    if target <= current:
+        # Already at or above target, required return is 0 or negative.
+        return 0.0
+    try:
+        return (target / current) ** (1.0 / years) - 1.0
+    except Exception:
+        return None
+
+
+def classify_feasibility(required_r: float | None) -> tuple[str, str]:
+    """
+    Map required annual return to a label + explanation.
+
+    Rough example thresholds:
+      <= 0%: "already_met"
+      0–5%: "very_conservative"
+      5–10%: "realistic"
+      10–20%: "aggressive"
+      >20%: "extremely_unlikely"
+    """
+    if required_r is None:
+        return "unknown", "We could not compute a meaningful required annual return from the inputs."
+
+    r_pct = required_r * 100.0
+
+    if r_pct <= 0:
+        return (
+            "already_met",
+            "Your current amount already meets or exceeds your target; you don't need growth to reach this goal."
+        )
+    if r_pct <= 5:
+        return (
+            "very_conservative",
+            f"Your goal requires about {r_pct:.1f}% annual growth, which is quite conservative and historically achievable with low-risk assets."
+        )
+    if r_pct <= 10:
+        return (
+            "realistic",
+            f"Your goal requires about {r_pct:.1f}% annual growth, which is realistic for a diversified portfolio over this time horizon."
+        )
+    if r_pct <= 20:
+        return (
+            "aggressive",
+            f"Your goal requires about {r_pct:.1f}% annual growth, which is aggressive. It may be possible but would likely involve higher-risk assets and volatility."
+        )
+    return (
+        "extremely_unlikely",
+        f"Your goal requires about {r_pct:.1f}% annual growth, which is extremely high and historically rare. "
+        "This level of return usually implies very high risk and a significant chance of not reaching the target."
+    )
+
+
+def make_growth_projection_chart(
+    current: float,
+    years: float,
+    rates: List[float],
+    required_rate: float | None = None
+) -> str | None:
+    """
+    Build a simple growth projection chart with constant annual rates.
+    `rates` and `required_rate` are decimals (0.07 = 7%).
+
+    Returns a base64 PNG string, or None on failure.
+    """
+    if current <= 0 or years <= 0:
+        return None
+
+    try:
+        horizon_years = max(1, int(math.ceil(years)))
+        x = list(range(0, horizon_years + 1))
+
+        fig, ax = plt.subplots(figsize=(8, 3))
+
+        # Base scenarios
+        for r in rates:
+            y = [current * ((1 + r) ** t) for t in x]
+            ax.plot(x, y, label=f"{r * 100:.0f}% per year")
+
+        # Required rate scenario (if makes sense and not already in list)
+        if required_rate is not None and required_rate > 0 and required_rate not in rates:
+            y_req = [current * ((1 + required_rate) ** t) for t in x]
+            ax.plot(x, y_req, linestyle="--", label=f"Required: {required_rate * 100:.1f}%")
+
+        ax.set_title("Simple Growth Projections (Educational Only)")
+        ax.set_xlabel("Years")
+        ax.set_ylabel("Portfolio Value")
+        ax.legend()
+        ax.grid(True)
+        fig.tight_layout()
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png")
+        plt.close(fig)
+        buf.seek(0)
+        return base64.b64encode(buf.read()).decode("utf-8")
+    except Exception as e:
+        print(f"[make_growth_projection_chart] Error: {e}")
+        return None
+
+
+def build_risk_warning(
+    risk_level: str,
+    feasibility_label: str,
+    required_r: float | None
+) -> str:
+    """
+    Build a user-facing risk warning string combining feasibility + self-declared risk.
+    """
+    r_pct = required_r * 100.0 if required_r is not None else None
+
+    # Base by feasibility
+    if feasibility_label == "extremely_unlikely":
+        base = (
+            "Your goal requires an extremely high annual return, which is historically rare and implies a high chance "
+            "of not reaching the target even with very aggressive strategies."
+        )
+    elif feasibility_label == "aggressive":
+        base = (
+            "Your goal requires an aggressive annual return, which likely involves significant volatility and a real "
+            "risk of meaningful losses along the way."
+        )
+    elif feasibility_label in ("realistic", "very_conservative"):
+        base = (
+            "Your required annual return is within a range that has historically been achievable with diversified "
+            "portfolios over similar horizons, but returns are never guaranteed."
+        )
+    else:
+        base = "We couldn't fully assess the feasibility of your goal from the provided numbers."
+
+    # Adjust by user self-declared risk preference
+    risk_level = (risk_level or "").lower()
+    if risk_level in ("high", "aggressive"):
+        addon = (
+            " Because you selected a high risk preference, it's especially important to be prepared for large swings "
+            "in value and to avoid investing money you cannot afford to lose."
+        )
+    elif risk_level in ("low", "safe"):
+        addon = (
+            " Because you prefer low risk, you may need to accept slower growth or consider adjusting your target amount "
+            "or timeline if the required return is high."
+        )
+    else:
+        addon = ""
+
+    if r_pct is not None and r_pct > 0:
+        prefix = f"In numeric terms, your goal implies about {r_pct:.1f}% annual growth. "
+    else:
+        prefix = ""
+
+    return prefix + base + addon
+
+
+# ---------------------------------------------------------------------------
 # Routes: pages
 # ---------------------------------------------------------------------------
 
@@ -450,6 +621,28 @@ def metals_page():
 @app.route("/metals.html")
 def metals_html_alias():
     return send_from_directory(BASE_DIR, "metals.html")
+
+
+# NEW: Investment Strategy Builder page
+@app.route("/strategy")
+def strategy_page():
+    return send_from_directory(BASE_DIR, "strategy.html")
+
+
+@app.route("/strategy.html")
+def strategy_html_alias():
+    return send_from_directory(BASE_DIR, "strategy.html")
+
+# Bonds page routes (NEW)
+@app.route("/bonds")
+def bonds_page():
+    return send_from_directory(BASE_DIR, "bonds.html")
+
+
+@app.route("/bonds.html")
+def bonds_html_alias():
+    return send_from_directory(BASE_DIR, "bonds.html")
+
 
 
 # ---------------------------------------------------------------------------
@@ -597,7 +790,7 @@ def api_analyze_report():
         Write as if explaining to an informed but non-expert investor.
 
         Report text:
-        \"\"\"{text}\"\"\""""
+        \"\"\"{combined_text}\"\"\""""
     try:
         resp = openai_client.chat.completions.create(
             model="gpt-4o",
@@ -799,8 +992,218 @@ def api_metals_info():
     return jsonify({"success": True, "metals": results, "chart_image": chart_b64})
 
 
+# ---------------------------------------------------------------------------
+# NEW: Investment Strategy Builder API
+# ---------------------------------------------------------------------------
+
+@app.route("/api/strategy-plan", methods=["POST"])
+def api_strategy_plan():
+    """
+    Build an educational investment strategy plan, feasibility check,
+    risk warning, and simple growth projections.
+
+    Expects JSON:
+      {
+        "goal": "...",
+        "current_amount": 50000,
+        "target_amount": 100000,
+        "time_horizon_years": 10,
+        "risk_level": "safe" | "moderate" | "high",
+        "preferences": ["stocks", "bonds", "metals", "crypto"]
+      }
+
+    Returns JSON:
+      {
+        "strategy_type": "...",
+        "recommended_assets": { ... },
+        "examples": [ ... ],
+        "explanation": "...",
+        "feasibility": {
+          "required_annual_return": 0.073,
+          "feasibility_label": "realistic",
+          "feasibility_explanation": "..."
+        },
+        "risk_warning": "...",
+        "growth_chart_image": "<base64 png or null>"
+      }
+    """
+    data = request.get_json(force=True, silent=True) or {}
+
+    goal_text = (data.get("goal") or "").strip()
+    current_amount = float(data.get("current_amount") or 0)
+    target_amount = float(data.get("target_amount") or 0)
+    time_horizon_years = float(data.get("time_horizon_years") or 0)
+    risk_level = (data.get("risk_level") or "").strip()
+    preferences = data.get("preferences") or []
+
+    # --- 1) Feasibility check ---
+    req_return = compute_required_return(current_amount, target_amount, time_horizon_years)
+    feasibility_label, feasibility_expl = classify_feasibility(req_return)
+
+    # --- 2) Growth projection chart ---
+    growth_chart_b64 = make_growth_projection_chart(
+        current=current_amount,
+        years=time_horizon_years,
+        rates=[0.04, 0.07, 0.10],
+        required_rate=req_return,
+    )
+
+    # --- 3) Risk warning text ---
+    risk_warning = build_risk_warning(risk_level, feasibility_label, req_return)
+
+    # --- 4) Call OpenAI to build strategy (passing feasibility info) ---
+    system_prompt = """
+    You are an educational investment strategy assistant inside an app called FinRobot.
+    You must NOT give financial advice, only educational examples.
+
+    The user provides a goal, capital, target, time horizon, risk level, and asset preferences.
+    You will:
+    - Suggest a general strategy_type (e.g., "long-term low-volatility compounding", "high-risk growth").
+    - Suggest specific example assets (stocks/ETFs, bonds, metals, crypto) as tickers or names, matching their preferences.
+    - Explain WHY this type of strategy is aligned with their goal and risk.
+    - Provide concrete examples, but emphasize that these are educational and not recommendations.
+
+    You are also given:
+    - required_annual_return (decimal)
+    - feasibility_label
+    - feasibility_explanation
+
+    Only use widely known, liquid examples (broad index ETFs, major bond ETFs, large-cap stocks, major metals, and large-cap crypto assets).
+    Avoid obscure microcaps or illiquid assets.
+
+    You MUST output valid JSON with keys:
+      - strategy_type (string)
+      - recommended_assets (object with keys like 'stocks', 'bonds', 'metals', 'crypto'; each a list of strings)
+      - examples (list of { "asset": string, "why": string })
+      - explanation (string)
+    """
+
+    user_prompt = f"""
+User goal and profile:
+
+- Goal: {goal_text}
+- Current amount: {current_amount}
+- Target amount: {target_amount}
+- Time horizon (years): {time_horizon_years}
+- Risk level: {risk_level}
+- Preferences: {', '.join(preferences)}
+
+Feasibility info:
+
+- required_annual_return: {req_return}
+- feasibility_label: {feasibility_label}
+- feasibility_explanation: {feasibility_expl}
+
+Return ONLY the JSON object described in the system prompt.
+"""
+
+    try:
+        resp = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.4,
+        )
+        content = resp.choices[0].message.content.strip()
+
+        # Strip ```json fences if present
+        if content.startswith("```"):
+            lines = content.splitlines()
+            if lines and lines[0].strip().startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip().startswith("```"):
+                lines = lines[:-1]
+            content = "\n".join(lines).strip()
+
+        import json
+        plan = json.loads(content)
+    except Exception as e:
+        print(f"[api_strategy_plan] OpenAI error: {e}")
+        return jsonify({"error": "Could not generate strategy"}), 500
+
+    return jsonify({
+        "strategy_type": plan.get("strategy_type"),
+        "recommended_assets": plan.get("recommended_assets", {}),
+        "examples": plan.get("examples", []),
+        "explanation": plan.get("explanation", ""),
+        "feasibility": {
+            "required_annual_return": req_return,
+            "feasibility_label": feasibility_label,
+            "feasibility_explanation": feasibility_expl,
+        },
+        "risk_warning": risk_warning,
+        "growth_chart_image": growth_chart_b64,
+    })
+
+@app.route("/api/bonds-info", methods=["POST"])
+def api_bonds_info():
+    """
+    Endpoint for bonds.html (inline JS).
+
+    Expects JSON:
+      { "bonds": ["10-year", "TLT", ...] }
+
+    Returns JSON:
+      {
+        "success": true,
+        "bonds": [ { ...info... }, ... ],
+        "chart_image": "<base64 png or null>"
+      }
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    bonds = data.get("bonds") or []
+    if not isinstance(bonds, list) or not bonds:
+        return jsonify({"success": False, "error": "No bonds provided."}), 400
+
+    results: List[Dict[str, Any]] = []
+    first_valid_input: str | None = None
+
+    for b in bonds:
+        name = (str(b) or "").strip()
+        if not name:
+            continue
+        try:
+            info = BondsUtils.get_bond_info(name)
+            results.append(info)
+            if first_valid_input is None:
+                first_valid_input = name
+        except Exception as e:
+            print(f"[api/bonds-info] Error fetching {name}: {e}")
+
+    if not results:
+        return jsonify({"success": False, "error": "No valid bonds found."}), 400
+
+    chart_b64: str | None = None
+    if first_valid_input:
+        try:
+            symbol = BondsUtils.resolve_symbol(first_valid_input)
+            df = BondsUtils.get_bond_history(first_valid_input, period="1y")
+            if not df.empty:
+                fig, ax = plt.subplots(figsize=(8, 3))
+                df["value"].plot(ax=ax)
+                title = f"{first_valid_input.title()} — Last 12 Months"
+                ax.set_title(title)
+                ax.set_ylabel("Yield (%)" if symbol.startswith("^") else "Price")
+                ax.grid(True)
+                fig.tight_layout()
+
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png")
+                plt.close(fig)
+                buf.seek(0)
+                chart_b64 = base64.b64encode(buf.read()).decode("utf-8")
+        except Exception as e:
+            print(f"[api/bonds-info] Error generating chart for {first_valid_input}: {e}")
+            chart_b64 = None
+
+    return jsonify({"success": True, "bonds": results, "chart_image": chart_b64})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
