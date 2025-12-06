@@ -185,3 +185,4 @@ class BondsUtils:
         df = df[["value"]]
         df.index.name = "date"
         return df
+

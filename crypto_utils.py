@@ -67,7 +67,7 @@ class CryptoUtils:
             "high_24h": m["high_24h"]["usd"],
             "low_24h": m["low_24h"]["usd"],
             "price_change_24h": m["price_change_percentage_24h"],
-            "description": short_desc,  # ⭐ short, cleaned description
+            "description": short_desc,  # short, cleaned description
         }
 
     @staticmethod
@@ -94,4 +94,5 @@ class CryptoUtils:
         df.drop(columns=["timestamp"], inplace=True)
 
         return df
+
 

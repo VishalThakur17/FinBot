@@ -131,6 +131,23 @@
       border: 1px solid #111827;
       background: #000;
     }
+
+    /* AI Insight panel styles */
+    #metals-ai-card {
+      margin-top: 16px;
+    }
+    .small-note {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin: 4px 0 8px 0;
+    }
+    .ai-output {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      color: #e5e7eb;
+    }
   </style>
 </head>
 <body>
@@ -160,9 +177,25 @@
       <h3>12-Month Price History (first metal)</h3>
       <img id="metals-chart-img" alt="Metal 12-month chart" />
     </div>
+
+    <!-- ⭐ AI Market Insight Panel -->
+    <section class="metal-card" id="metals-ai-card">
+      <h2>AI Market Insight</h2>
+      <p class="small-note">
+        Let FinRobot explain how this metal or commodity has been behaving and what typically drives it.
+        This is educational only and not financial advice.
+      </p>
+
+      <button type="button" id="metals-ai-button">Generate AI Breakdown</button>
+
+      <div id="metals-ai-status" class="status"></div>
+      <div id="metals-ai-output" class="ai-output"></div>
+    </section>
   </div>
 
   <script>
+    let lastMetalsDataForAI = null;
+
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("metals-form");
       const input = document.getElementById("metals-input");
@@ -172,13 +205,26 @@
       const chartImg = document.getElementById("metals-chart-img");
       const submitBtn = document.getElementById("metals-submit-btn");
 
+      const aiBtn = document.getElementById("metals-ai-button");
+      const aiStatus = document.getElementById("metals-ai-status");
+      const aiOutput = document.getElementById("metals-ai-output");
+
+      function setMainStatus(text, type) {
+        statusEl.textContent = text;
+        statusEl.className = "status " + (type || "");
+      }
+
+      function setAIStatus(text, type) {
+        aiStatus.textContent = text;
+        aiStatus.className = "status " + (type || "");
+      }
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const raw = (input.value || "").trim();
         if (!raw) {
-          statusEl.textContent = "Please enter at least one metal.";
-          statusEl.className = "status error";
+          setMainStatus("Please enter at least one metal.", "error");
           return;
         }
 
@@ -187,11 +233,15 @@
           .map((m) => m.trim())
           .filter(Boolean);
 
-        statusEl.textContent = "Analyzing…";
-        statusEl.className = "status loading";
+        setMainStatus("Analyzing…", "loading");
         resultsEl.innerHTML = "";
         chartContainer.style.display = "none";
         submitBtn.disabled = true;
+
+        // Reset AI panel for new query
+        lastMetalsDataForAI = null;
+        setAIStatus("", "");
+        aiOutput.textContent = "";
 
         try {
           const response = await fetch("/api/metals-info", {
@@ -215,6 +265,9 @@
           if (!data.success) {
             throw new Error(data.error || "Unknown error from server");
           }
+
+          // Store full response for AI insight
+          lastMetalsDataForAI = data;
 
           // Render cards
           resultsEl.innerHTML = data.metals
@@ -250,17 +303,57 @@
             chartContainer.style.display = "block";
           }
 
-          statusEl.textContent = "Done ✔";
-          statusEl.className = "status success";
+          setMainStatus("Done ✔", "success");
         } catch (err) {
           console.error(err);
-          statusEl.textContent = "Error: " + err.message;
-          statusEl.className = "status error";
+          setMainStatus("Error: " + err.message, "error");
         } finally {
           submitBtn.disabled = false;
+        }
+      });
+
+      // AI Breakdown button logic
+      aiBtn.addEventListener("click", async () => {
+        if (!lastMetalsDataForAI) {
+          setAIStatus("Please run a metals analysis first so we have data.", "error");
+          return;
+        }
+
+        setAIStatus("Generating AI market insight…", "loading");
+        aiOutput.textContent = "";
+        aiBtn.disabled = true;
+
+        try {
+          const resp = await fetch("/api/ai-asset-insight", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              asset_type: "metal",
+              data: lastMetalsDataForAI
+            })
+          });
+
+          const result = await resp.json().catch(() => null);
+
+          if (!resp.ok || !result || !result.success) {
+            const msg =
+              (result && result.error) ||
+              `Server error: ${resp.status}`;
+            throw new Error(msg);
+          }
+
+          aiOutput.textContent = result.insight || "No insight text returned.";
+          setAIStatus("AI insight generated ✔", "success");
+        } catch (err) {
+          console.error(err);
+          setAIStatus("Error: " + err.message, "error");
+        } finally {
+          aiBtn.disabled = false;
         }
       });
     });
   </script>
 </body>
 </html>
+
+

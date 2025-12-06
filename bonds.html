@@ -131,6 +131,23 @@
       border: 1px solid #111827;
       background: #000;
     }
+
+    /* AI Insight panel styles */
+    #bonds-ai-card {
+      margin-top: 16px;
+    }
+    .small-note {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin: 4px 0 8px 0;
+    }
+    .ai-output {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-wrap; /* preserve paragraphs from the model */
+      color: #e5e7eb;
+    }
   </style>
 </head>
 <body>
@@ -160,9 +177,25 @@
       <h3>12-Month History (first bond)</h3>
       <img id="bonds-chart-img" alt="Bond 12-month chart" />
     </div>
+
+    <!-- ⭐ AI Market Insight Panel -->
+    <section class="bond-card" id="bonds-ai-card">
+      <h2>AI Market Insight</h2>
+      <p class="small-note">
+        Let FinRobot explain how this bond or yield has been behaving and what typically drives it.
+        This is educational only and not financial advice.
+      </p>
+
+      <button type="button" id="bonds-ai-button">Generate AI Breakdown</button>
+
+      <div id="bonds-ai-status" class="status"></div>
+      <div id="bonds-ai-output" class="ai-output"></div>
+    </section>
   </div>
 
   <script>
+    let lastBondsDataForAI = null;
+
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("bonds-form");
       const input = document.getElementById("bonds-input");
@@ -172,13 +205,26 @@
       const chartImg = document.getElementById("bonds-chart-img");
       const submitBtn = document.getElementById("bonds-submit-btn");
 
+      const aiBtn = document.getElementById("bonds-ai-button");
+      const aiStatus = document.getElementById("bonds-ai-status");
+      const aiOutput = document.getElementById("bonds-ai-output");
+
+      function setMainStatus(text, type) {
+        statusEl.textContent = text;
+        statusEl.className = "status " + (type || "");
+      }
+
+      function setAIStatus(text, type) {
+        aiStatus.textContent = text;
+        aiStatus.className = "status " + (type || "");
+      }
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const raw = (input.value || "").trim();
         if (!raw) {
-          statusEl.textContent = "Please enter at least one bond input.";
-          statusEl.className = "status error";
+          setMainStatus("Please enter at least one bond input.", "error");
           return;
         }
 
@@ -187,11 +233,15 @@
           .map((b) => b.trim())
           .filter(Boolean);
 
-        statusEl.textContent = "Analyzing…";
-        statusEl.className = "status loading";
+        setMainStatus("Analyzing…", "loading");
         resultsEl.innerHTML = "";
         chartContainer.style.display = "none";
         submitBtn.disabled = true;
+
+        // Reset AI panel for new query
+        lastBondsDataForAI = null;
+        setAIStatus("", "");
+        aiOutput.textContent = "";
 
         try {
           const response = await fetch("/api/bonds-info", {
@@ -215,6 +265,9 @@
           if (!data.success) {
             throw new Error(data.error || "Unknown error from server");
           }
+
+          // Store full response JSON for AI insight use
+          lastBondsDataForAI = data;
 
           resultsEl.innerHTML = data.bonds
             .map((b) => {
@@ -251,17 +304,56 @@
             chartContainer.style.display = "block";
           }
 
-          statusEl.textContent = "Done ✔";
-          statusEl.className = "status success";
+          setMainStatus("Done ✔", "success");
         } catch (err) {
           console.error(err);
-          statusEl.textContent = "Error: " + err.message;
-          statusEl.className = "status error";
+          setMainStatus("Error: " + err.message, "error");
         } finally {
           submitBtn.disabled = false;
+        }
+      });
+
+      // AI Breakdown button logic
+      aiBtn.addEventListener("click", async () => {
+        if (!lastBondsDataForAI) {
+          setAIStatus("Please run a bonds analysis first so we have data.", "error");
+          return;
+        }
+
+        setAIStatus("Generating AI market insight…", "loading");
+        aiOutput.textContent = "";
+        aiBtn.disabled = true;
+
+        try {
+          const resp = await fetch("/api/ai-asset-insight", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              asset_type: "bond",
+              data: lastBondsDataForAI
+            })
+          });
+
+          const result = await resp.json().catch(() => null);
+
+          if (!resp.ok || !result || !result.success) {
+            const msg =
+              (result && result.error) ||
+              `Server error: ${resp.status}`;
+            throw new Error(msg);
+          }
+
+          aiOutput.textContent = result.insight || "No insight text returned.";
+          setAIStatus("AI insight generated ✔", "success");
+        } catch (err) {
+          console.error(err);
+          setAIStatus("Error: " + err.message, "error");
+        } finally {
+          aiBtn.disabled = false;
         }
       });
     });
   </script>
 </body>
 </html>
+

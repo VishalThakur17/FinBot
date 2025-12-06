@@ -102,3 +102,4 @@ class MetalsUtils:
         df = data[["Close"]].rename(columns={"Close": "price"}).copy()
         df.index.name = "date"
         return df
+

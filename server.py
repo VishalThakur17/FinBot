@@ -3,7 +3,8 @@ import datetime as dt
 from typing import List, Dict, Any
 import io
 import base64
-import math  
+import math
+import json  # NEW: for serializing payloads to send to OpenAI
 
 from flask import Flask, request, jsonify, send_from_directory
 from dateutil.relativedelta import relativedelta
@@ -12,11 +13,11 @@ import yfinance as yf
 import pandas as pd
 # IMPORTANT: use a non-GUI backend for matplotlib
 import matplotlib
-matplotlib.use("Agg")    
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from crypto_utils import CryptoUtils
-from metals_utils import MetalsUtils 
+from metals_utils import MetalsUtils
 from bonds_utils import BondsUtils
 
 try:
@@ -185,10 +186,10 @@ Task:
 
 Output format (MUST be valid JSON and nothing else):
 
-{{
+{
   "forecast_prices": [p_month_1, p_month_2, p_month_3],
   "explanation": "Your explanation here..."
-}}
+}
 """
 
     response = openai_client.chat.completions.create(
@@ -211,7 +212,6 @@ Output format (MUST be valid JSON and nothing else):
             lines = lines[:-1]
         content = "\n".join(lines).strip()
 
-    import json
     try:
         parsed = json.loads(content)
     except json.JSONDecodeError:
@@ -522,6 +522,68 @@ def build_risk_warning(
 
 
 # ---------------------------------------------------------------------------
+# NEW helper: shared AI market insight for crypto / metals / bonds
+# ---------------------------------------------------------------------------
+
+def call_openai_asset_insight(asset_type: str, raw_payload: Dict[str, Any]) -> str:
+    """
+    Given an asset_type ('crypto', 'metal', or 'bond') and the raw JSON payload
+    returned by your /api/*-info endpoint, ask OpenAI to produce a short
+    educational market explanation.
+
+    Returns plain text (2–4 short paragraphs, no markdown).
+    """
+    asset_type = (asset_type or "").lower()
+    if asset_type not in ("crypto", "metal", "bond"):
+        raise ValueError(f"Unsupported asset_type: {asset_type}")
+
+    # Keep payload modest in size for the model: if it ever gets huge you can trim here
+    payload_snippet = json.dumps(raw_payload, indent=2)[:8000]
+
+    system_prompt = (
+        "You are a cautious financial explainer inside an educational app called FinRobot. "
+        "The app shows real market data for different assets (cryptocurrencies, metals/commodities, or bonds). "
+        "Given structured JSON data (current price, 24h changes, 52-week range, volume, etc.), you will write a "
+        "short explanation of how the asset has been behaving recently and what typically drives its movements.\n\n"
+        "Rules:\n"
+        "- You are NOT giving financial advice; everything is educational only.\n"
+        "- Do NOT tell the user to buy, sell, or hold anything.\n"
+        "- Focus on risk, volatility, time horizon, and what might cause big moves (macro rates, inflation, adoption, etc.).\n"
+        "- Mention that past performance does not guarantee future results.\n"
+        "- Output 2–4 short paragraphs of plain text. No bullet points, no markdown."
+    )
+
+    user_prompt = f"""
+Asset type: {asset_type}
+
+Below is the JSON payload from the app with current stats and a recent 12-month chart encoded:
+
+```json
+{payload_snippet}
+```
+
+Using this information:
+
+- Explain in plain English how this asset (or basket of assets) has roughly behaved over the last year.
+- Comment on whether the recent move looks mild, volatile, or extreme based on the 52-week range and recent change.
+- Explain what usually drives this type of asset (macro conditions, rates, sentiment, supply/demand, etc.).
+- Emphasize that this is not advice and that past performance does not guarantee future results.
+"""
+
+    resp = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0.45,
+    )
+
+    text = resp.choices[0].message.content.strip()
+    return text
+
+
+# ---------------------------------------------------------------------------
 # Routes: pages
 # ---------------------------------------------------------------------------
 
@@ -633,6 +695,7 @@ def strategy_page():
 def strategy_html_alias():
     return send_from_directory(BASE_DIR, "strategy.html")
 
+
 # Bonds page routes (NEW)
 @app.route("/bonds")
 def bonds_page():
@@ -642,7 +705,6 @@ def bonds_page():
 @app.route("/bonds.html")
 def bonds_html_alias():
     return send_from_directory(BASE_DIR, "bonds.html")
-
 
 
 # ---------------------------------------------------------------------------
@@ -1117,7 +1179,6 @@ Return ONLY the JSON object described in the system prompt.
                 lines = lines[:-1]
             content = "\n".join(lines).strip()
 
-        import json
         plan = json.loads(content)
     except Exception as e:
         print(f"[api_strategy_plan] OpenAI error: {e}")
@@ -1136,6 +1197,7 @@ Return ONLY the JSON object described in the system prompt.
         "risk_warning": risk_warning,
         "growth_chart_image": growth_chart_b64,
     })
+
 
 @app.route("/api/bonds-info", methods=["POST"])
 def api_bonds_info():
@@ -1199,6 +1261,45 @@ def api_bonds_info():
             chart_b64 = None
 
     return jsonify({"success": True, "bonds": results, "chart_image": chart_b64})
+
+
+# ---------------------------------------------------------------------------
+# NEW: Shared AI Market Insight endpoint for crypto / metals / bonds
+# ---------------------------------------------------------------------------
+
+@app.route("/api/ai-asset-insight", methods=["POST"])
+def api_ai_asset_insight():
+    """
+    Shared endpoint used by crypto.html, metals.html, and bonds.html
+    to generate an AI-written educational market explanation.
+
+    Expects JSON:
+      {
+        "asset_type": "crypto" | "metal" | "bond",
+        "data": { ...payload returned by /api/crypto-info or /api/metals-info or /api/bonds-info... }
+      }
+
+    Returns JSON:
+      {
+        "success": true,
+        "insight": "2–4 paragraph plain-text explanation..."
+      }
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    asset_type = (data.get("asset_type") or "").strip().lower()
+    payload = data.get("data")
+
+    if asset_type not in ("crypto", "metal", "bond"):
+        return jsonify({"success": False, "error": "Invalid or missing 'asset_type'."}), 400
+    if not isinstance(payload, dict):
+        return jsonify({"success": False, "error": "Missing or invalid 'data' payload."}), 400
+
+    try:
+        insight = call_openai_asset_insight(asset_type, payload)
+        return jsonify({"success": True, "insight": insight})
+    except Exception as e:
+        print(f"[api_ai-asset-insight] Error: {e}")
+        return jsonify({"success": False, "error": "Failed to generate AI insight."}), 500
 
 
 if __name__ == "__main__":
