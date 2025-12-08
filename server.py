@@ -131,20 +131,22 @@ def call_openai_scenario_forecast(
     if not historical:
         raise ValueError("No historical data passed to OpenAI forecast.")
 
-    closes = [p["close"] for p in historical]
+    closes = [float(p["close"]) for p in historical if "close" in p and p["close"] is not None]
     dates = [p["date"] for p in historical]
 
     last_price = closes[-1]
     min_price = min(closes)
     max_price = max(closes)
     first_price = closes[0]
-    trend_pct = ((last_price - first_price) / first_price) * 100 if first_price != 0 else 0
+    trend_pct = ((last_price - first_price) / first_price * 100.0) if first_price != 0 else 0.0
 
-    trend_description = "roughly flat"
+    # Simple text descriptions
     if trend_pct > 8:
         trend_description = "upward"
     elif trend_pct < -8:
         trend_description = "downward"
+    else:
+        trend_description = "roughly flat"
 
     system_prompt = (
         "You are a cautious financial analysis assistant. "
@@ -167,10 +169,10 @@ Resolved ticker symbol: {symbol}
 
 Historical data (real, from Yahoo Finance):
 - Date range: from {dates[0]} to {dates[-1]}
-- Last closing price: {last_price:.2f}
-- 12-month low: {min_price:.2f}
-- 12-month high: {max_price:.2f}
-- Overall trend over the last year: {trend_description} (approx {trend_pct:.1f}% change)
+- Last closing price: {last_price}
+- 12-month low: {min_price}
+- 12-month high: {max_price}
+- Overall trend over the last year: {trend_description} (approx {trend_pct} % change)
 
 Scenario to analyze:
 \"\"\"{scenario}\"\"\"
@@ -186,10 +188,10 @@ Task:
 
 Output format (MUST be valid JSON and nothing else):
 
-{
+{{
   "forecast_prices": [p_month_1, p_month_2, p_month_3],
   "explanation": "Your explanation here..."
-}
+}}
 """
 
     response = openai_client.chat.completions.create(
@@ -212,10 +214,7 @@ Output format (MUST be valid JSON and nothing else):
             lines = lines[:-1]
         content = "\n".join(lines).strip()
 
-    try:
-        parsed = json.loads(content)
-    except json.JSONDecodeError:
-        raise RuntimeError(f"OpenAI returned non-JSON content: {content}")
+    parsed = json.loads(content)
 
     forecast_prices = parsed.get("forecast_prices", [])
     explanation = parsed.get("explanation", "").strip()
@@ -223,12 +222,10 @@ Output format (MUST be valid JSON and nothing else):
     if not isinstance(forecast_prices, list) or len(forecast_prices) != 3:
         raise RuntimeError(f"OpenAI returned unexpected forecast_prices: {forecast_prices}")
 
-    try:
-        forecast_prices = [float(p) for p in forecast_prices]
-    except Exception as e:
-        raise RuntimeError(f"Could not parse forecast prices as floats: {forecast_prices}") from e
+    forecast_prices = [float(p) for p in forecast_prices]
 
     return {"forecast": forecast_prices, "explanation": explanation}
+
 
 
 # ---------------------------------------------------------------------------
