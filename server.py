@@ -33,8 +33,7 @@ app = Flask(
     static_url_path=""
 )
 
-openai_client = OpenAI()  # picks up OPENAI_API_KEY from env
-
+openai_client = OpenAI(api_key="")
 
 # ---------------------------------------------------------------------------
 # Helper: resolve company name -> ticker using OpenAI
