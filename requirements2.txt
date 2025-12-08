@@ -1,0 +1,28 @@
+# --- Core Server Framework ---
+flask==3.1.2
+werkzeug==3.1.3
+
+# --- OpenAI API / AI Insights ---
+openai==1.57.0
+tiktoken==0.7.0
+
+# --- Data Processing ---
+pandas==2.2.3
+numpy==1.26.4
+
+# --- Financial Market Data ---
+yfinance==0.2.41
+pandas_datareader==0.10.0
+
+# --- Plotting / Chart Generation ---
+matplotlib==3.8.4
+
+# --- Utility HTTP Requests ---
+requests==2.32.3
+
+# --- Dates / Timezones ---
+python-dateutil==2.9.0.post0
+pytz==2024.1
+
+# --- For Image Saving of Matplotlib Charts ---
+Pillow==10.2.0
